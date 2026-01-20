@@ -1,0 +1,78 @@
+@startuml setup-sequence
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam sequenceMessageAlign center
+
+title 開発環境セットアップ シーケンス図（概要）
+
+actor "開発者" as Dev
+participant "セットアップ\nスクリプト" as Setup
+participant "共有フォルダ\n(packages.csv)" as Share
+participant "ローカルPC\n(C:\\dev-tools)" as Local
+database "環境変数\n(PATH等)" as Env
+
+== ツールインストール ==
+
+Dev -> Setup: setup-dev-env-v2.ps1 実行
+activate Setup
+
+Setup -> Share: packages.csv 読み込み
+Share --> Setup: ツール定義一覧
+
+loop 各パッケージ
+    Setup -> Share: パッケージファイル取得\n(ZIP/MSI等)
+    Setup -> Setup: ハッシュ検証 (SHA256)
+    alt ハッシュ一致
+        Setup -> Local: 展開/インストール
+        Setup -> Env: 環境変数設定\n(JAVA_HOME等)
+        Setup -> Env: PATH追加
+    else ハッシュ不一致
+        Setup -> Dev: エラー通知
+    end
+end
+
+Setup -> Local: installed.json 保存
+Setup --> Dev: 完了サマリー表示
+
+deactivate Setup
+
+== 設定ファイル適用 ==
+
+Dev -> Setup: apply-configs.ps1 実行
+activate Setup
+
+Setup -> Share: configs.csv 読み込み
+Share --> Setup: 設定定義一覧
+
+loop 各設定ファイル
+    Setup -> Local: 既存設定バックアップ
+    Setup -> Share: 設定ファイル取得
+    Setup -> Local: 設定ファイル配置\n(copy/patch/merge)
+end
+
+Setup --> Dev: 適用完了
+
+deactivate Setup
+
+== インストール状況確認 ==
+
+Dev -> Setup: check-installed.ps1 実行
+activate Setup
+
+Setup -> Share: packages.csv 読み込み\n(期待バージョン)
+Setup -> Local: installed.json 読み込み
+Setup -> Env: コマンド実行\n(java -version等)
+
+Setup -> Setup: バージョン比較
+
+alt バージョン一致
+    Setup --> Dev: [OK] 正常
+else バージョン不一致
+    Setup --> Dev: [!!] 不一致警告
+else 未インストール
+    Setup --> Dev: [--] 未インストール
+end
+
+deactivate Setup
+
+@enduml

@@ -10,7 +10,7 @@ export const useAttendanceStore = defineStore('attendance', () => {
   const error = ref<string | null>(null)
 
   const todayRecords = computed(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = new Date().toISOString().split('T')[0] ?? ''
     return records.value.filter((r) => r.timestamp.startsWith(today))
   })
 

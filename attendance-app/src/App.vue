@@ -1,10 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <v-container>
-        <h1>勤怠くん</h1>
-        <p>セットアップ完了</p>
-      </v-container>
+      <router-view />
     </v-main>
   </v-app>
 </template>
